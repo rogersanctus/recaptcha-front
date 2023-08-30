@@ -57,7 +57,6 @@ function App() {
   const onSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault()
-      console.log('submited')
 
       const controller = new AbortController()
       const post = async () => {
@@ -78,10 +77,8 @@ function App() {
 
         if (resp.status === 200) {
           setErrors([])
-          console.log('Sent and saved')
         } else {
           const error = await resp.json()
-          console.log('Error', error)
           setErrors(formalizeErrors(error.errors))
         }
       }
