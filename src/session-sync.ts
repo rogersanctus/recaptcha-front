@@ -12,7 +12,7 @@ export function createSessionSynchronizer() {
     })
 
     if (resp.status === 204) {
-      const token = resp.headers.get('x-token-recaptcha')
+      const token = resp.headers.get('x-csrf-token')
 
       if (token !== null) {
         sessionStorage.setItem('x-session', token)

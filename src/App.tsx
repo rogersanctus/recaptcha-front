@@ -68,7 +68,7 @@ function App() {
           credentials: 'include',
           headers: {
             'content-type': 'application/json; charset=utf-8',
-            'x-token-recaptcha': sessionStorage.getItem('x-session') ?? '',
+            'x-csrf-token': sessionStorage.getItem('x-session') ?? '',
             'x-captcha-token': token
           }
         })
