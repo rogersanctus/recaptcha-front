@@ -106,7 +106,6 @@ function App() {
       retry: 'never',
 
       callback: (token: string) => {
-        console.log(token)
         setIsValidating(false)
         saveForm(token)
       },
