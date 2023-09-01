@@ -12,8 +12,8 @@ interface ValidationError {
 const formKeys = [{ key: 'email', identifier: 'The e-mail' }]
 
 function formalizeErrors(errors: ValidationError[]): ValidationError[] {
-  return errors.map(error => {
-    const formKey = formKeys.find(fk => fk.key === error.key)
+  return errors.map((error) => {
+    const formKey = formKeys.find((fk) => fk.key === error.key)
     const newError = {
       ...error
     }
@@ -204,7 +204,7 @@ function App() {
       {errors.length > 0 ? (
         <div className="validation-result">
           <ul>
-            {errors.map(error => (
+            {errors.map((error) => (
               <li key={error.key}>{error.message}</li>
             ))}
           </ul>
