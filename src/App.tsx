@@ -62,14 +62,13 @@ function App() {
 
       try {
         const resp = await fetch('http://localhost:4000/api/form', {
-          body: JSON.stringify({ email: email }),
+          body: JSON.stringify({ email: email, captcha_token: token }),
           method: 'POST',
           signal: saveAbortController.current?.signal,
           credentials: 'include',
           headers: {
             'content-type': 'application/json; charset=utf-8',
-            'x-csrf-token': sessionStorage.getItem('x-session') ?? '',
-            'x-captcha-token': token
+            'x-csrf-token': sessionStorage.getItem('x-session') ?? ''
           }
         })
 
