@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 
 import './App.css'
 import { createSessionSynchronizer } from './session-sync'
-import { validate_email } from './validators'
+import { validate_email } from './lib/validators'
 import { ValidationError, formalizeErrors } from './lib/error-handling'
 
 function App() {
