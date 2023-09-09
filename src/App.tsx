@@ -4,6 +4,7 @@ import './App.css'
 import { createSessionSynchronizer } from './session-sync'
 import { validate_email } from './lib/validators'
 import { ValidationError, formalizeErrors } from './lib/error-handling'
+import { removeCaptcha, renderCaptcha } from './lib/captcha'
 
 function App() {
   const [email, setEmail] = useState('')
@@ -82,48 +83,6 @@ function App() {
     post()
   }
 
-  const renderCaptcha = () => {
-    if (turnstileWidgetId.current) {
-      turnstile.remove(turnstileWidgetId.current)
-      turnstileWidgetId.current = null
-    }
-
-    type PromiseContext = {
-      resolve: (token: string) => void
-      reject: (error: Error) => void
-    }
-
-    const promiseContext: PromiseContext = {
-      resolve: () => undefined,
-      reject: () => new Error('Promise was not ready.')
-    }
-
-    /**
-     * Returns the `token` string when captcha validation is successful
-     * or throws an error when captcha validation fails with `errorCode`
-     */
-    const captchaPromise = new Promise<string>((resolve, reject) => {
-      promiseContext.resolve = resolve
-      promiseContext.reject = reject
-    })
-
-    const renderResult = turnstile.render('.cf-turnstile', {
-      sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
-      retry: 'never',
-
-      callback: (token: string) => {
-        promiseContext.resolve(token)
-      },
-
-      'error-callback': (errorCode: string) => {
-        promiseContext.reject(new Error(errorCode))
-        return true
-      }
-    })
-
-    return { widgetId: renderResult, captchaPromise }
-  }
-
   useEffect(() => {
     const { controller: syncAbortController, sync } =
       createSessionSynchronizer()
@@ -191,6 +150,11 @@ function App() {
 
     // Makes the render captcha call after its wrapper element is rendered
     setTimeout(async () => {
+      removeCaptcha(
+        turnstileWidgetId.current,
+        () => (turnstileWidgetId.current = null)
+      )
+
       const { widgetId, captchaPromise } = renderCaptcha()
       turnstileWidgetId.current = widgetId
 
