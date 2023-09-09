@@ -83,28 +83,45 @@ function App() {
   }
 
   const renderCaptcha = () => {
-    setIsValidating(true)
-
     if (turnstileWidgetId.current) {
       turnstile.remove(turnstileWidgetId.current)
       turnstileWidgetId.current = null
     }
 
-    return turnstile.render('.cf-turnstile', {
+    type PromiseContext = {
+      resolve: (token: string) => void
+      reject: (error: Error) => void
+    }
+
+    const promiseContext: PromiseContext = {
+      resolve: () => undefined,
+      reject: () => new Error('Promise was not ready.')
+    }
+
+    /**
+     * Returns the `token` string when captcha validation is successful
+     * or throws an error when captcha validation fails with `errorCode`
+     */
+    const captchaPromise = new Promise<string>((resolve, reject) => {
+      promiseContext.resolve = resolve
+      promiseContext.reject = reject
+    })
+
+    const renderResult = turnstile.render('.cf-turnstile', {
       sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
       retry: 'never',
 
       callback: (token: string) => {
-        setIsValidating(false)
-        saveForm(token)
+        promiseContext.resolve(token)
       },
 
       'error-callback': (errorCode: string) => {
-        console.error(errorCode)
-
+        promiseContext.reject(new Error(errorCode))
         return true
       }
     })
+
+    return { widgetId: renderResult, captchaPromise }
   }
 
   useEffect(() => {
@@ -173,8 +190,19 @@ function App() {
     }
 
     // Makes the render captcha call after its wrapper element is rendered
-    setTimeout(() => {
-      turnstileWidgetId.current = renderCaptcha()
+    setTimeout(async () => {
+      const { widgetId, captchaPromise } = renderCaptcha()
+      turnstileWidgetId.current = widgetId
+
+      setIsValidating(true)
+      try {
+        const token = await captchaPromise
+        saveForm(token)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setIsValidating(false)
+      }
     }, 0)
   }
 
