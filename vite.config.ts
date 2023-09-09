@@ -4,6 +4,7 @@ import path, { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import anymatch from 'anymatch'
 import { lstatSync } from 'node:fs'
+import UnoCSS from 'unocss/vite'
 
 // The list of files to watch (using glob patterns)
 const watchList = [
@@ -70,5 +71,5 @@ export default defineConfig({
       }
     }
   },
-  plugins: [react()]
+  plugins: [UnoCSS(), react()]
 })

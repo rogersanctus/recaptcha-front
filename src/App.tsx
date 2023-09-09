@@ -8,7 +8,12 @@ import { ValidationError, formalizeErrors } from './lib/error-handling'
 function App() {
   const [email, setEmail] = useState('')
   const [errors, setErrors] = useState<ValidationError[]>([])
+  const [errorsMap, setErrorsMap] = useState<Record<string, ValidationError>>(
+    {}
+  )
   const [isValidating, setIsValidating] = useState(false)
+  const [isShowingCaptchaValidator, setIsShowingCaptchaValidator] =
+    useState(false)
   const emailFieldDirty = useRef(false)
   const isTurnstileReady = useRef(false)
   const saveAbortController = useRef<AbortController | undefined>(undefined)
@@ -19,7 +24,15 @@ function App() {
       errors
     }
 
-    setErrors(formalizeErrors(errors))
+    const newErrors = formalizeErrors(errors)
+    const newErrorsMap: Record<string, ValidationError> = {}
+
+    for (const error of newErrors) {
+      newErrorsMap[error.key] = error
+    }
+
+    setErrorsMap(newErrorsMap)
+    setErrors(newErrors)
   }
 
   const saveForm = (token: string) => {
@@ -150,6 +163,8 @@ function App() {
       return
     }
 
+    setIsShowingCaptchaValidator(true)
+
     const validationResult = validate_email(email)
 
     if (validationResult !== true) {
@@ -157,38 +172,64 @@ function App() {
       return
     }
 
-    turnstileWidgetId.current = renderCaptcha()
+    // Makes the render captcha call after its wrapper element is rendered
+    setTimeout(() => {
+      turnstileWidgetId.current = renderCaptcha()
+    }, 0)
   }
 
   return (
-    <>
-      <form onSubmit={onSubmit}>
-        <label htmlFor="email">E-mail</label>
-        <input
-          type="email"
-          placeholder="Your e-mail"
-          value={email}
-          onChange={onEmailChange}
-          onBlur={onEmailBlur}
-        />
+    <div className="flex flex-col items-center justify-center bg-zinc-1 h-screen">
+      <form
+        onSubmit={onSubmit}
+        className="border rounded-4 bg-sky-800 p-8 text-white flex flex-col gap-8 w-9/10 lg:w-2/3 xl:w-1/3">
+        <h1 className="text-lg font-bold uppercase text-center">
+          Captcha Test
+        </h1>
+        <div className="">
+          <label
+            htmlFor="email"
+            className="block text-sm font-bold text-zinc-100">
+            E-mail
+          </label>
+          <input
+            type="email"
+            name="email"
+            placeholder="Your e-mail"
+            value={email}
+            className={`w-full rounded border-2 mt-2 px-4 py-2 text-zinc-600 outline-none focus:ring-2
+              ${
+                !errorsMap['email'] ? 'border-slate-300 focus:ring-sky-300' : ''
+              }
+              ${
+                errorsMap['email'] ? ' border-red-400 focus:ring-red-400' : ''
+              }`}
+            onChange={onEmailChange}
+            onBlur={onEmailBlur}
+          />
+        </div>
 
-        <button type="submit">
+        <button
+          type="submit"
+          className="w-full rounded-1 text-lg px-4 py-2 font-semibold uppercase outline-none border border-lime-500 bg-lime-400 drop-shadow focus:bg-lime-500 focus:border-lime-600 hover:bg-lime-500 hover:border-lime-600">
           Send {isValidating ? <span> ...</span> : ''}
         </button>
-        <div className="cf-turnstile"></div>
+        {isShowingCaptchaValidator && (
+          <div className="cf-turnstile text-center inline-flex justify-center"></div>
+        )}
+        {errors.length > 0 ? (
+          <div className="validation-result text-center text-lg text-red-300 font-semibold">
+            <ul>
+              {errors.map((error) => (
+                <li key={error.key}>{error.message}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          ''
+        )}
       </form>
-      {errors.length > 0 ? (
-        <div className="validation-result">
-          <ul>
-            {errors.map((error) => (
-              <li key={error.key}>{error.message}</li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        ''
-      )}
-    </>
+    </div>
   )
 }
 
