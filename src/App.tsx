@@ -4,7 +4,7 @@ import './App.css'
 import { createSessionSynchronizer } from './session-sync'
 import { validate_email } from './lib/validators'
 import { ValidationError, formalizeErrors } from './lib/error-handling'
-import { removeCaptcha, renderCaptcha } from './lib/captcha'
+import { CaptchaError, removeCaptcha, renderCaptcha } from './lib/captcha'
 
 function App() {
   const [email, setEmail] = useState('')
@@ -21,8 +21,10 @@ function App() {
   const turnstileWidgetId = useRef<string | null>(null)
 
   function updateErrors(errors: ValidationError[]) {
-    if (errors.length === 0) {
-      errors
+    if (!Array.isArray(errors) || errors.length === 0) {
+      setErrors([])
+      setErrorsMap({})
+      return
     }
 
     const newErrors = formalizeErrors(errors)
@@ -63,7 +65,7 @@ function App() {
           }
         })
 
-        if (resp.status === 200) {
+        if (resp.ok) {
           updateErrors([])
         } else {
           const error = await resp.json()
@@ -163,7 +165,11 @@ function App() {
         const token = await captchaPromise
         saveForm(token)
       } catch (error) {
-        console.error(error)
+        if (error instanceof CaptchaError) {
+          console.error('That was a catpcha error', error.errorCode)
+        } else {
+          console.error(error)
+        }
       } finally {
         setIsValidating(false)
       }
