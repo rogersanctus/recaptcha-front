@@ -5,7 +5,7 @@ export function createSessionSynchronizer() {
       return
     }
 
-    const resp = await fetch('http://localhost:4000/api/session', {
+    const resp = await fetch('http://localhost:4000/api/form', {
       method: 'GET',
       signal: controller.signal,
       credentials: 'include'
