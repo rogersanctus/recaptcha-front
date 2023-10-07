@@ -21,10 +21,14 @@ function App() {
   const turnstileWidgetId = useRef<string | null>(null)
 
   function updateErrors(errors: ValidationError[]) {
-    if (!Array.isArray(errors) || errors.length === 0) {
+    if (!errors || errors.length === 0) {
       setErrors([])
       setErrorsMap({})
       return
+    }
+
+    if (!Array.isArray(errors)) {
+      errors = [errors]
     }
 
     const newErrors = formalizeErrors(errors)
