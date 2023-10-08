@@ -5,6 +5,7 @@ import { createSessionSynchronizer } from './session-sync'
 import { validate_email } from './lib/validators'
 import { ValidationError, formalizeErrors } from './lib/error-handling'
 import { CaptchaError, removeCaptcha, renderCaptcha } from './lib/captcha'
+import { toast } from 'react-toastify'
 
 function App() {
   const [email, setEmail] = useState('')
@@ -52,6 +53,9 @@ function App() {
               'Could not save form. Please reload the page and try again.'
           }
         ])
+        console.error(
+          'The session could not be retrieved and stored in the session storage. The CSRF token is not set.'
+        )
         return
       }
 
@@ -73,6 +77,21 @@ function App() {
           updateErrors([])
         } else {
           const error = await resp.json()
+
+          if (
+            (error.errors as ValidationError[]).find((e) => e.key === 'csrf')
+          ) {
+            toast.error(
+              'This form is open for a long time. For your safety, the page will be reloaded...',
+              {
+                onClose: () => {
+                  sessionStorage.removeItem('x-session')
+                  window.location.reload()
+                }
+              }
+            )
+          }
+
           updateErrors(error.errors)
         }
       } catch (error) {
