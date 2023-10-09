@@ -200,6 +200,13 @@ function App() {
         saveForm(token)
       } catch (error) {
         if (error instanceof CaptchaError) {
+          updateErrors([
+            {
+              key: 'captcha',
+              message:
+                'Fail on captcha validation. Please refresh the page and try it again.'
+            }
+          ])
           console.error('That was a catpcha error', error.errorCode)
         } else {
           console.error(error)
