@@ -75,24 +75,35 @@ function App() {
 
         if (resp.ok) {
           updateErrors([])
+
+          toast.success('Thank you for submitting the form =).', {
+            theme: 'colored'
+          })
+
+          setEmail('')
+          turnstileWidgetId.current &&
+            turnstile.remove(turnstileWidgetId.current)
         } else {
           const error = await resp.json()
 
           if (
             (error.errors as ValidationError[]).find((e) => e.key === 'csrf')
           ) {
-            toast.error(
-              'This form is open for a long time. For your safety, the page will be reloaded...',
-              {
-                onClose: () => {
-                  sessionStorage.removeItem('x-session')
-                  window.location.reload()
-                }
-              }
-            )
-          }
+            const { sync } = createSessionSynchronizer()
 
-          updateErrors(error.errors)
+            sessionStorage.removeItem('x-session')
+            sync()
+
+            updateErrors([
+              {
+                key: 'csrf',
+                message:
+                  'This form is open for a long time. For your safety, its internal state was reloaded. Please try to send it now.'
+              }
+            ])
+          } else {
+            updateErrors(error.errors)
+          }
         }
       } catch (error) {
         updateErrors([
